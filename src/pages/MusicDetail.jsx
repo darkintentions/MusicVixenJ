@@ -21,6 +21,9 @@ export default function MusicDetail() {
   const [saving, setSaving] = useState(false)
   const [tableRows, setTableRows] = useState(null)
   const [importOpen, setImportOpen] = useState(false)
+  const [keysRows, setKeysRows] = useState(null)
+  const [importKeysOpen, setImportKeysOpen] = useState(false)
+  const [keysExpanded, setKeysExpanded] = useState(true)
   const [activeTab, setActiveTab] = useState('pdf')
   const [tableFilter, setTableFilter] = useState('')
 
@@ -37,6 +40,11 @@ export default function MusicDetail() {
       try { setTableRows(JSON.parse(m.table_data)) } catch { setTableRows([]) }
     } else {
       setTableRows([])
+    }
+    if (m.keys_data) {
+      try { setKeysRows(JSON.parse(m.keys_data)) } catch { setKeysRows([]) }
+    } else {
+      setKeysRows([])
     }
 
     if (isTeacher) {
@@ -60,6 +68,7 @@ export default function MusicDetail() {
           title,
           notes,
           table_data: tableRows?.length ? JSON.stringify(tableRows) : null,
+          keys_data: keysRows?.length ? JSON.stringify(keysRows) : null,
         }),
       })
       setMusic(prev => ({ ...prev, ...updated }))
@@ -96,6 +105,36 @@ export default function MusicDetail() {
     await apiFetch(`/music/${id}`, {
       method: 'PATCH',
       body: JSON.stringify({ title, notes, table_data: null }),
+    })
+  }
+
+  async function handleKeysImport(e) {
+    const text = e.clipboardData.getData('text')
+    if (!text.trim()) return
+    e.preventDefault()
+
+    const rows = text
+      .split(/\r?\n/)
+      .map(line => line.split('\t'))
+      .filter(row => row.some(cell => cell.trim()))
+
+    if (!rows.length) return
+
+    setKeysRows(rows)
+    setImportKeysOpen(false)
+
+    await apiFetch(`/music/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ title, notes, keys_data: JSON.stringify(rows) }),
+    })
+  }
+
+  async function clearKeys() {
+    if (!confirm('Are you sure you want to clear the keys? This cannot be undone.')) return
+    setKeysRows([])
+    await apiFetch(`/music/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ title, notes, keys_data: null }),
     })
   }
 
@@ -287,6 +326,65 @@ export default function MusicDetail() {
                   )}
                 </div>
               )}
+
+              {/* Keys Table (collapsible) */}
+              {keysRows !== null && keysRows.length > 0 && (
+                <div className="mt-6">
+                  <button
+                    onClick={() => setKeysExpanded(!keysExpanded)}
+                    className="flex items-center gap-2 mb-3 text-gray-700 font-medium"
+                  >
+                    <span style={{ fontSize: 16 }}>
+                      {keysExpanded ? '▼' : '▶'} Keys
+                    </span>
+                  </button>
+                  {keysExpanded && (
+                    <div className="bg-white border rounded-xl p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <h3 className="font-medium text-gray-700" style={{ fontSize: 16 }}>
+                          Keys
+                          <span className="ml-2 text-gray-400 font-normal" style={{ fontSize: 16 }}>
+                            {keysRows.length - 1} rows · {Math.max(...keysRows.map(r => r.length))} columns
+                          </span>
+                        </h3>
+                        {isTeacher && (
+                          <button
+                            onClick={clearKeys}
+                            className="text-gray-400 hover:text-red-500 transition-colors"
+                            style={{ fontSize: 16 }}
+                          >
+                            Clear
+                          </button>
+                        )}
+                      </div>
+                      <div className="overflow-x-auto">
+                        <table className="w-full border-collapse" style={{ fontSize: 16 }}>
+                          <thead>
+                            <tr className="bg-gray-100">
+                              {keysRows[0].map((cell, ci) => (
+                                <th key={ci} className="border border-gray-200 px-3 py-1.5 text-left font-semibold text-gray-700 whitespace-nowrap">
+                                  {cell}
+                                </th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {keysRows.slice(1).map((row, ri) => (
+                              <tr key={ri} className={ri % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                                {Array.from({ length: Math.max(...keysRows.map(r => r.length)) }).map((_, ci) => (
+                                  <td key={ci} className="border border-gray-200 px-3 py-1.5 text-gray-700">
+                                    {row[ci] ?? ''}
+                                  </td>
+                                ))}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </>
           )}
         </div>
@@ -426,9 +524,15 @@ export default function MusicDetail() {
             </div>
           )}
 
-          {/* Import Table + Delete (teacher only) */}
+          {/* Import Keys + Import Table + Delete (teacher only) */}
           {isTeacher && (
             <>
+              <button
+                onClick={() => setImportKeysOpen(true)}
+                className="w-full text-sm text-indigo-600 hover:text-indigo-800 py-2 border border-indigo-200 rounded-xl hover:bg-indigo-50 transition-colors"
+              >
+                Import Keys
+              </button>
               <button
                 onClick={() => setImportOpen(true)}
                 className="w-full text-sm text-indigo-600 hover:text-indigo-800 py-2 border border-indigo-200 rounded-xl hover:bg-indigo-50 transition-colors"
@@ -475,6 +579,44 @@ export default function MusicDetail() {
             <div className="flex justify-end mt-4">
               <button
                 onClick={() => setImportOpen(false)}
+                className="text-sm text-gray-500 hover:text-gray-700 px-4 py-2"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Import Keys modal */}
+      {importKeysOpen && (
+        <div
+          className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
+          onClick={e => { if (e.target === e.currentTarget) setImportKeysOpen(false) }}
+        >
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-base font-semibold text-gray-900">Import Keys</h2>
+              <button
+                onClick={() => setImportKeysOpen(false)}
+                className="text-gray-400 hover:text-gray-600 text-xl leading-none"
+              >
+                ×
+              </button>
+            </div>
+            <p className="text-sm text-gray-500 mb-4">
+              Copy cells from Excel or Google Sheets, then paste into the box below. The modal will close automatically once data is detected.
+            </p>
+            <textarea
+              autoFocus
+              className="w-full border rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none text-gray-400"
+              rows={5}
+              placeholder="Paste TSV data here (Ctrl+V / Cmd+V)…"
+              onPaste={handleKeysImport}
+            />
+            <div className="flex justify-end mt-4">
+              <button
+                onClick={() => setImportKeysOpen(false)}
                 className="text-sm text-gray-500 hover:text-gray-700 px-4 py-2"
               >
                 Cancel

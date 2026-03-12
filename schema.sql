@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS music (
   r2_key TEXT NOT NULL,
   extracted_text TEXT,
   table_data TEXT,
+  keys_data TEXT,
   notes TEXT,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );

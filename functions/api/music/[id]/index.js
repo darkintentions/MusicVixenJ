@@ -33,11 +33,11 @@ export async function onRequestPatch(context) {
   const { request, env, params, data } = context
   if (data.user.role !== 'teacher') return error('Forbidden', 403)
 
-  const { title, notes, table_data } = await request.json()
+  const { title, notes, table_data, keys_data } = await request.json()
   if (!title?.trim()) return error('Title is required')
 
-  await env.DB.prepare('UPDATE music SET title = ?, notes = ?, table_data = ? WHERE id = ?')
-    .bind(title.trim(), notes || null, table_data ?? null, params.id)
+  await env.DB.prepare('UPDATE music SET title = ?, notes = ?, table_data = ?, keys_data = ? WHERE id = ?')
+    .bind(title.trim(), notes || null, table_data ?? null, keys_data ?? null, params.id)
     .run()
 
   const music = await env.DB.prepare(`
