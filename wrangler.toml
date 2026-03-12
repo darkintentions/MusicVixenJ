@@ -1,0 +1,15 @@
+name = "music-db"
+compatibility_date = "2024-11-01"
+pages_build_output_dir = "dist"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "musicvixenj"
+database_id = "ab58046a-db34-4f4d-9fbe-a3c61e50d959"
+
+[[r2_buckets]]
+binding = "MUSIC_BUCKET"
+bucket_name = "musicvixenj"
+
+[vars]
+JWT_SECRET = "change-this-secret-before-deploying"
