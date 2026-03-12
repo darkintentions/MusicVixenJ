@@ -95,7 +95,12 @@ export default function MusicDetail() {
 
     await apiFetch(`/music/${id}`, {
       method: 'PATCH',
-      body: JSON.stringify({ title, notes, table_data: JSON.stringify(rows) }),
+      body: JSON.stringify({
+        title,
+        notes,
+        table_data: JSON.stringify(rows),
+        keys_data: keysRows?.length ? JSON.stringify(keysRows) : null
+      }),
     })
   }
 
@@ -104,7 +109,12 @@ export default function MusicDetail() {
     setTableRows([])
     await apiFetch(`/music/${id}`, {
       method: 'PATCH',
-      body: JSON.stringify({ title, notes, table_data: null }),
+      body: JSON.stringify({
+        title,
+        notes,
+        table_data: null,
+        keys_data: keysRows?.length ? JSON.stringify(keysRows) : null
+      }),
     })
   }
 
@@ -125,7 +135,12 @@ export default function MusicDetail() {
 
     await apiFetch(`/music/${id}`, {
       method: 'PATCH',
-      body: JSON.stringify({ title, notes, keys_data: JSON.stringify(rows) }),
+      body: JSON.stringify({
+        title,
+        notes,
+        table_data: tableRows?.length ? JSON.stringify(tableRows) : null,
+        keys_data: JSON.stringify(rows)
+      }),
     })
   }
 
@@ -134,7 +149,12 @@ export default function MusicDetail() {
     setKeysRows([])
     await apiFetch(`/music/${id}`, {
       method: 'PATCH',
-      body: JSON.stringify({ title, notes, keys_data: null }),
+      body: JSON.stringify({
+        title,
+        notes,
+        table_data: tableRows?.length ? JSON.stringify(tableRows) : null,
+        keys_data: null
+      }),
     })
   }
 
