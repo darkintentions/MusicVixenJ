@@ -93,29 +93,41 @@ export default function MusicDetail() {
     setTableRows(rows)
     setImportOpen(false)
 
-    await apiFetch(`/music/${id}`, {
-      method: 'PATCH',
-      body: JSON.stringify({
-        title,
-        notes,
-        table_data: JSON.stringify(rows),
-        keys_data: keysRows?.length ? JSON.stringify(keysRows) : null
-      }),
-    })
+    try {
+      const result = await apiFetch(`/music/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({
+          title,
+          notes,
+          table_data: JSON.stringify(rows),
+          keys_data: keysRows?.length ? JSON.stringify(keysRows) : null
+        }),
+      })
+      console.log('Table data saved:', result)
+    } catch (err) {
+      console.error('Failed to save table data:', err)
+      alert('Failed to save table data. Check the console for details.')
+    }
   }
 
   async function clearTable() {
     if (!confirm('Are you sure you want to clear the table? This cannot be undone.')) return
     setTableRows([])
-    await apiFetch(`/music/${id}`, {
-      method: 'PATCH',
-      body: JSON.stringify({
-        title,
-        notes,
-        table_data: null,
-        keys_data: keysRows?.length ? JSON.stringify(keysRows) : null
-      }),
-    })
+    try {
+      await apiFetch(`/music/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({
+          title,
+          notes,
+          table_data: null,
+          keys_data: keysRows?.length ? JSON.stringify(keysRows) : null
+        }),
+      })
+      console.log('Table cleared')
+    } catch (err) {
+      console.error('Failed to clear table:', err)
+      alert('Failed to clear table. Check the console for details.')
+    }
   }
 
   async function handleKeysImport(e) {
@@ -133,29 +145,41 @@ export default function MusicDetail() {
     setKeysRows(rows)
     setImportKeysOpen(false)
 
-    await apiFetch(`/music/${id}`, {
-      method: 'PATCH',
-      body: JSON.stringify({
-        title,
-        notes,
-        table_data: tableRows?.length ? JSON.stringify(tableRows) : null,
-        keys_data: JSON.stringify(rows)
-      }),
-    })
+    try {
+      const result = await apiFetch(`/music/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({
+          title,
+          notes,
+          table_data: tableRows?.length ? JSON.stringify(tableRows) : null,
+          keys_data: JSON.stringify(rows)
+        }),
+      })
+      console.log('Keys data saved:', result)
+    } catch (err) {
+      console.error('Failed to save keys data:', err)
+      alert('Failed to save keys data. Check the console for details.')
+    }
   }
 
   async function clearKeys() {
     if (!confirm('Are you sure you want to clear the keys? This cannot be undone.')) return
     setKeysRows([])
-    await apiFetch(`/music/${id}`, {
-      method: 'PATCH',
-      body: JSON.stringify({
-        title,
-        notes,
-        table_data: tableRows?.length ? JSON.stringify(tableRows) : null,
-        keys_data: null
-      }),
-    })
+    try {
+      await apiFetch(`/music/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({
+          title,
+          notes,
+          table_data: tableRows?.length ? JSON.stringify(tableRows) : null,
+          keys_data: null
+        }),
+      })
+      console.log('Keys cleared')
+    } catch (err) {
+      console.error('Failed to clear keys:', err)
+      alert('Failed to clear keys. Check the console for details.')
+    }
   }
 
   async function toggleTag(tag) {
